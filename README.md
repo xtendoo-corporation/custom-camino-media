@@ -2,7 +2,7 @@
 
 Personalizaciones de Odoo 19.0 para **Camino Media, S.L.** (https://caminomedia.xtd.es).
 
-## custom_camino_media
+## camino_media_report
 
 Extiende el informe de factura **estándar** de Odoo (sin sustituirlo) para mostrar
 los datos propios de Camino Media:
