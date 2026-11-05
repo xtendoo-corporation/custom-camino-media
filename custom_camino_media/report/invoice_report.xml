@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extiende el informe estándar: tres datos más en el bloque de información. -->
+    <template id="report_invoice_document" inherit_id="account.report_invoice_document">
+        <!-- El pie del layout estándar se traduce con el idioma del usuario; aquí, con el del cliente. -->
+        <xpath expr="//t[@t-call='web.external_layout']" position="before">
+            <t t-set="company" t-value="o.company_id.sudo().with_context(lang=lang)"/>
+        </xpath>
+        <xpath expr="//div[@name='reference']" position="after">
+            <div class="col" t-if="o.camino_location" name="camino_location">
+                <strong t-out="o.fields_get(['camino_location'], ['string'])['camino_location']['string']"/>
+                <div t-field="o.camino_location"/>
+            </div>
+            <div class="col" t-if="o.camino_shoot_dates" name="camino_shoot_dates">
+                <strong t-out="o.fields_get(['camino_shoot_dates'], ['string'])['camino_shoot_dates']['string']"/>
+                <div t-field="o.camino_shoot_dates"/>
+            </div>
+            <div class="col" t-if="o.camino_contact" name="camino_contact">
+                <strong t-out="o.fields_get(['camino_contact'], ['string'])['camino_contact']['string']"/>
+                <div t-field="o.camino_contact"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>
