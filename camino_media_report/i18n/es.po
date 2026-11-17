@@ -83,3 +83,183 @@ msgstr "Dirección del banco"
 #: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_invoice_warning
 msgid "Invoice Warning"
 msgstr "Aviso en factura"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_brand
+msgid "Brand"
+msgstr "Marca"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_project_type
+msgid "Project Type"
+msgstr "Tipo de proyecto"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_project_code
+msgid "Project Code"
+msgstr "Código de proyecto"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_purchase_order
+msgid "Purchase Order"
+msgstr "Orden de compra"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_channel
+msgid "Work Origin"
+msgstr "Origen del trabajo"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_internal_note
+msgid "Internal Note"
+msgstr "Nota interna"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move_line__camino_channel
+msgid "Work Origin"
+msgstr "Origen del trabajo"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move_line__camino_description
+msgid "Job Description"
+msgstr "Descripción del trabajo"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_company__camino_psn_logo
+msgid "PSN Logo"
+msgstr "Logotipo PSN"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_company__camino_media_logo
+msgid "Camino Media Logo"
+msgstr "Logotipo Camino Media"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_company__camino_invoice_follower_ids
+msgid "Invoice Followers"
+msgstr "Seguidores de facturas"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_project_type__advertising
+msgid "Advertising"
+msgstr "Anuncio"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_project_type__film
+msgid "Film"
+msgstr "Cine"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_project_type__tv
+msgid "TV"
+msgstr "TV"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_project_type__documentary
+msgid "Documentary"
+msgstr "Documental"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_project_type__spot
+msgid "Spot"
+msgstr "Spot"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_project_type__still_photo
+msgid "Still Photography"
+msgstr "Fotografía fija"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_brand__psn
+msgid "Production Service Network"
+msgstr "Production Service Network"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_brand__camino
+msgid "Camino Media"
+msgstr "Camino Media"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_channel__ny_rep
+msgid "New York Representative"
+msgstr "Representante de Nueva York"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_channel__london_rep
+msgid "London Representative"
+msgstr "Representante de Londres"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_channel__hollywood_rep
+msgid "Hollywood Representative"
+msgstr "Representante de Hollywood"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_channel__referral
+msgid "Referral"
+msgstr "Referido"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move__camino_channel__partner
+msgid "Partner"
+msgstr "Socio"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move_line__camino_channel__ny_rep
+msgid "New York Representative"
+msgstr "Representante de Nueva York"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move_line__camino_channel__london_rep
+msgid "London Representative"
+msgstr "Representante de Londres"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move_line__camino_channel__hollywood_rep
+msgid "Hollywood Representative"
+msgstr "Representante de Hollywood"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move_line__camino_channel__referral
+msgid "Referral"
+msgstr "Referido"
+
+#. module: camino_media_report
+#: model:ir.model.fields.selection,name:camino_media_report.selection__account_move_line__camino_channel__partner
+msgid "Partner"
+msgstr "Socio"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_move_form_camino
+msgid "Bank Account"
+msgstr "Cuenta bancaria"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_account_invoice_filter_camino
+msgid "Project Type"
+msgstr "Tipo de proyecto"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_account_invoice_filter_camino
+msgid "Advertising"
+msgstr "Anuncio"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_account_invoice_filter_camino
+msgid "Film"
+msgstr "Cine"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_account_invoice_filter_camino
+msgid "Documentary"
+msgstr "Documental"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_account_invoice_filter_camino
+msgid "Still Photography"
+msgstr "Fotografía fija"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_company_form_camino
+msgid "Invoice Branding"
+msgstr "Marca de la factura"

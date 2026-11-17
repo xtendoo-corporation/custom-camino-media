@@ -1,12 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Extiende el informe estándar: tres datos más en el bloque de información. -->
+    <!--
+        Extiende el informe estándar. Todas las etiquetas salen en inglés y español a la vez
+        (el español en cursiva, gris y más pequeño), con independencia del idioma del cliente.
+    -->
     <template id="report_invoice_document" inherit_id="account.report_invoice_document">
         <!-- El pie del layout estándar se traduce con el idioma del usuario; aquí, con el del cliente. -->
         <xpath expr="//t[@t-call='web.external_layout']" position="before">
             <t t-set="company" t-value="o.company_id.sudo().with_context(lang=lang)"/>
         </xpath>
+
+        <!-- Cabecera de marca: PSN (por defecto) o Camino Media. -->
+        <xpath expr="//div[hasclass('page')]/*[1]" position="before">
+            <t t-if="o.move_type in ('out_invoice', 'out_refund')">
+                <t t-set="brand_company" t-value="o.company_id.sudo()"/>
+                <div name="camino_brand_header" class="mb-4">
+                    <t t-if="o.camino_brand == 'camino'">
+                        <img t-if="brand_company.camino_media_logo" t-att-src="image_data_uri(brand_company.camino_media_logo)"
+                             alt="Camino Media" style="max-height: 80px;"/>
+                        <h3 t-else="" class="mb-0">Camino Media</h3>
+                    </t>
+                    <t t-else="">
+                        <img t-if="brand_company.camino_psn_logo" t-att-src="image_data_uri(brand_company.camino_psn_logo)"
+                             alt="Production Service Network" style="max-height: 80px;"/>
+                        <h3 t-else="" class="mb-0">Production Service Network</h3>
+                    </t>
+                </div>
+            </t>
+        </xpath>
+
+        <!-- Título bilingüe. -->
+        <xpath expr="//t[@name='invoice_title']" position="replace">
+            <t name="invoice_title"><t t-out="o._camino_label('invoice')"/></t>
+        </xpath>
+        <xpath expr="//t[@name='credit_note_title']" position="replace">
+            <t name="credit_note_title"><t t-out="o._camino_label('credit_note')"/></t>
+        </xpath>
+
+        <!-- Etiquetas del bloque de información, bilingües. -->
+        <xpath expr="//div[@name='invoice_date']" position="replace">
+            <div class="col" t-if="o.invoice_date" name="invoice_date">
+                <strong t-if="o.move_type == 'out_refund'" t-out="o._camino_label('credit_note_date', block=True)"/>
+                <strong t-else="" t-out="o._camino_label('invoice_date', block=True)"/>
+                <div t-field="o.invoice_date"/>
+            </div>
+        </xpath>
+        <xpath expr="//div[@name='due_date']/strong" position="replace">
+            <strong t-out="o._camino_label('due_date', block=True)"/>
+        </xpath>
+        <xpath expr="//div[@name='reference']/strong" position="replace">
+            <strong t-out="o._camino_label('reference', block=True)"/>
+        </xpath>
+
         <!-- Solo descripción e importe: los servicios se facturan globalmente, sin unidades. -->
+        <xpath expr="//th[@name='th_description']/span" position="replace">
+            <span t-out="o._camino_label('description')"/>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']/span" position="replace">
+            <span t-out="o._camino_label('amount')"/>
+        </xpath>
         <xpath expr="//th[@name='th_quantity']" position="replace"/>
         <xpath expr="//th[@name='th_priceunit']" position="replace"/>
         <xpath expr="//th[@name='th_discount']" position="replace"/>
@@ -15,57 +67,82 @@
         <xpath expr="//td[@name='td_price_unit']" position="replace"/>
         <xpath expr="//td[@name='td_discount']" position="replace"/>
         <xpath expr="//td[@name='td_taxes']" position="replace"/>
-        <!-- Descripción en español en gris, bajo el concepto en inglés. -->
-        <xpath expr="//td[@name='account_invoice_line_name']" position="inside">
-            <div t-if="line.camino_name_es" class="text-muted" t-out="line.camino_name_es"/>
+
+        <!-- Línea: concepto en negrita, descripción del trabajo entre paréntesis y traducción en gris cursiva. -->
+        <xpath expr="//td[@name='account_invoice_line_name']/span" position="replace">
+            <div>
+                <strong t-if="line.name" t-field="line.name" t-options="{'widget': 'text'}" dir="auto"/>
+                <t t-if="line.camino_description"> (<span t-field="line.camino_description"/>)</t>
+            </div>
+            <div t-if="line.camino_name_es" class="camino-es"
+                 style="font-style: italic; color: #6c757d; font-size: 85%;"
+                 t-out="line.camino_name_es"/>
         </xpath>
+
         <!-- Datos de la cuenta de cobro: la cuenta la elige Odoo según la moneda de la factura. -->
         <xpath expr="//t[@t-set='show_qr']" position="before">
-            <div t-if="o.move_type in ('out_invoice', 'out_refund') and o.partner_bank_id" name="camino_bank_block" class="mb-3">
+            <div t-if="o.move_type in ('out_invoice', 'out_refund') and o.partner_bank_id" name="camino_bank_block" class="mb-3"
+                 style="page-break-inside: avoid;">
                 <table class="table table-sm table-borderless w-auto mb-1">
                     <tr>
-                        <td class="fw-bold">Beneficiary / Beneficiario:</td>
+                        <td class="fw-bold"><t t-out="o._camino_label('beneficiary')"/>:</td>
                         <td t-out="o.partner_bank_id.acc_holder_name"/>
                     </tr>
                     <tr>
-                        <td class="fw-bold">Bank / Banco:</td>
+                        <td class="fw-bold"><t t-out="o._camino_label('bank')"/>:</td>
                         <td t-out="o.partner_bank_id.bank_id.name"/>
                     </tr>
                     <tr>
-                        <td class="fw-bold">SWIFT/BIC Code / Codigo SWIFT/BIC:</td>
+                        <td class="fw-bold"><t t-out="o._camino_label('swift')"/>:</td>
                         <td t-out="o.partner_bank_id.bank_bic"/>
                     </tr>
                     <tr>
-                        <td class="fw-bold">IBAN:</td>
+                        <td class="fw-bold"><t t-out="o._camino_label('iban')"/>:</td>
                         <td t-out="o.partner_bank_id.acc_number"/>
                     </tr>
                     <tr t-if="o.partner_bank_id.camino_intermediary_bic">
-                        <td class="fw-bold">Intermediary BIC:</td>
+                        <td class="fw-bold"><t t-out="o._camino_label('intermediary_bic')"/>:</td>
                         <td t-out="o.partner_bank_id.camino_intermediary_bic"/>
                     </tr>
                     <tr t-if="o.partner_bank_id.camino_bank_address">
-                        <td class="fw-bold">Address / Dirección:</td>
+                        <td class="fw-bold"><t t-out="o._camino_label('bank_address')"/>:</td>
                         <td t-out="o.partner_bank_id.camino_bank_address" style="white-space: pre-line;"/>
                     </tr>
                 </table>
-                <p class="mb-1">Please cite invoice number for our reference.</p>
-                <p t-if="o.partner_bank_id.camino_invoice_warning"
-                   class="fw-bold text-danger mb-0"
-                   style="white-space: pre-line;"
-                   t-out="o.partner_bank_id.camino_invoice_warning"/>
+                <p class="mb-1"><t t-out="o._camino_label('cite_invoice')"/></p>
+                <!-- Aviso de pago: el de la cuenta si lo tiene; si no, el aviso estándar bilingüe. -->
+                <div name="camino_payment_notice" class="fw-bold text-danger mb-0"
+                     style="white-space: pre-line; color: #dc3545; page-break-inside: avoid;">
+                    <t t-if="o.partner_bank_id.camino_invoice_warning" t-out="o.partner_bank_id.camino_invoice_warning"/>
+                    <t t-else="">
+                        <t t-set="notice" t-value="o._camino_pair('payment_notice')"/>
+                        <div t-out="notice[0]"/>
+                        <div t-out="notice[1]"/>
+                    </t>
+                </div>
             </div>
         </xpath>
+
+        <!-- Datos propios de la factura. -->
         <xpath expr="//div[@name='reference']" position="after">
+            <div class="col" t-if="o.camino_project_code" name="camino_project_code">
+                <strong t-out="o._camino_label('project_code', block=True)"/>
+                <div t-field="o.camino_project_code"/>
+            </div>
+            <div class="col" t-if="o.camino_purchase_order" name="camino_purchase_order">
+                <strong t-out="o._camino_label('purchase_order', block=True)"/>
+                <div t-field="o.camino_purchase_order"/>
+            </div>
             <div class="col" t-if="o.camino_location" name="camino_location">
-                <strong t-out="o.fields_get(['camino_location'], ['string'])['camino_location']['string']"/>
+                <strong t-out="o._camino_label('location', block=True)"/>
                 <div t-field="o.camino_location"/>
             </div>
             <div class="col" t-if="o.camino_shoot_dates" name="camino_shoot_dates">
-                <strong t-out="o.fields_get(['camino_shoot_dates'], ['string'])['camino_shoot_dates']['string']"/>
+                <strong t-out="o._camino_label('shoot_dates', block=True)"/>
                 <div t-field="o.camino_shoot_dates"/>
             </div>
             <div class="col" t-if="o.camino_contact" name="camino_contact">
-                <strong t-out="o.fields_get(['camino_contact'], ['string'])['camino_contact']['string']"/>
+                <strong t-out="o._camino_label('contact', block=True)"/>
                 <div t-field="o.camino_contact"/>
             </div>
         </xpath>

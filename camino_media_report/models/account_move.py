@@ -1,6 +1,62 @@
-from odoo import fields, models
+from markupsafe import Markup
+
+from odoo import api, fields, models
 
 CREDIT_NOTE_PREFIX = "CREDITNOTE/"
+
+PROJECT_TYPES = [
+    ("advertising", "Advertising"),
+    ("film", "Film"),
+    ("tv", "TV"),
+    ("documentary", "Documentary"),
+    ("spot", "Spot"),
+    ("still_photo", "Still Photography"),
+]
+CHANNELS = [
+    ("ny_rep", "New York Representative"),
+    ("london_rep", "London Representative"),
+    ("hollywood_rep", "Hollywood Representative"),
+    ("referral", "Referral"),
+    ("partner", "Partner"),
+]
+BRANDS = [
+    ("psn", "Production Service Network"),
+    ("camino", "Camino Media"),
+]
+# Fixed (English, Spanish) pairs: the invoice always prints both languages,
+# regardless of the customer language.
+LABELS = {
+    "invoice": ("Invoice", "Factura"),
+    "credit_note": ("Credit Note", "Nota de crédito"),
+    "invoice_date": ("Invoice Date", "Fecha de factura"),
+    "credit_note_date": ("Credit Note Date", "Fecha de la nota de crédito"),
+    "due_date": ("Due Date", "Fecha de vencimiento"),
+    "reference": ("Reference", "Referencia"),
+    "description": ("Description", "Descripción"),
+    "amount": ("Amount", "Importe"),
+    "project_code": ("Project", "Proyecto"),
+    "purchase_order": ("Purchase Order", "Orden de compra"),
+    "location": ("Location", "Localización"),
+    "shoot_dates": ("Shoot Dates", "Fechas de rodaje"),
+    "contact": ("Contact", "Contacto"),
+    "beneficiary": ("Beneficiary", "Beneficiario"),
+    "bank": ("Bank", "Banco"),
+    "swift": ("SWIFT/BIC Code", "Código SWIFT/BIC"),
+    "iban": ("IBAN", "IBAN"),
+    "intermediary_bic": ("Intermediary BIC", "BIC intermediario"),
+    "bank_address": ("Address", "Dirección"),
+    "cite_invoice": (
+        "Please cite invoice number for our reference.",
+        "Indique el número de factura como referencia.",
+    ),
+    "payment_notice": (
+        "All bank charges are for the account of the payer. "
+        "Payment must be made in the currency of the account.",
+        "Todos los gastos bancarios corren a cargo del pagador. "
+        "El pago debe hacerse en la moneda de la cuenta.",
+    ),
+}
+ES_STYLE = "font-style: italic; color: #6c757d; font-size: 85%;"
 
 
 class AccountMove(models.Model):
@@ -9,6 +65,83 @@ class AccountMove(models.Model):
     camino_location = fields.Char(string="Location", copy=False)
     camino_shoot_dates = fields.Char(string="Shoot Dates", copy=False)
     camino_contact = fields.Char(string="Contact", copy=False)
+    camino_brand = fields.Selection(
+        BRANDS,
+        string="Brand",
+        default="psn",
+        required=True,
+        help="Brand whose header is printed on the invoice.",
+    )
+    camino_project_type = fields.Selection(
+        PROJECT_TYPES,
+        string="Project Type",
+        index=True,
+        copy=False,
+        help="Classifies the invoice for the year-end review.",
+    )
+    camino_project_code = fields.Char(
+        string="Project Code",
+        copy=False,
+        help="Matches the project code in the customer's CRM (e.g. Project 583).",
+    )
+    camino_purchase_order = fields.Char(string="Purchase Order", copy=False)
+    camino_channel = fields.Selection(
+        CHANNELS,
+        string="Work Origin",
+        copy=False,
+        groups="account.group_account_invoice,account.group_account_readonly",
+        help="Internal: who brought the job. Never printed on the invoice.",
+    )
+    camino_internal_note = fields.Text(
+        string="Internal Note",
+        copy=False,
+        groups="account.group_account_invoice,account.group_account_readonly",
+        help="Internal: payment agreements and collection reminders.",
+    )
+
+    @api.model
+    def _camino_pair(self, key):
+        """(English, Spanish) texts of a fixed label."""
+        return LABELS[key]
+
+    @api.model
+    def _camino_label(self, key, block=False):
+        """Bilingual label: English followed by the Spanish one (italic, grey, small).
+
+        With ``block`` the Spanish text goes on its own line (narrow table columns).
+        """
+        english, spanish = LABELS[key]
+        style = ES_STYLE + (" display: block;" if block else "")
+        return Markup('{} <span class="camino-es" style="{}">{}</span>').format(
+            english, style, spanish
+        )
+
+    def _compute_partner_bank_id(self):
+        # EXTENDS account: on customer documents the collecting account must match the
+        # invoice currency. The standard compute lets the customer's default payment
+        # method (journal account) win, which ignores the currency.
+        super()._compute_partner_bank_id()
+        for move in self.filtered(lambda m: m.move_type in ("out_invoice", "out_refund")):
+            bank = move.partner_bank_id
+            if bank and bank.active and bank.currency_id == move.currency_id:
+                continue
+            candidates = move.company_id.partner_id.bank_ids.filtered("active")
+            match = candidates.filtered(lambda b: b.currency_id == move.currency_id)
+            if match:
+                move.partner_bank_id = match[:1]
+            elif not bank:
+                move.partner_bank_id = candidates.filtered(lambda b: not b.currency_id)[:1]
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        moves = super().create(vals_list)
+        for move in moves.filtered(
+            lambda m: m.move_type in ("out_invoice", "out_refund")
+        ):
+            followers = move.company_id.camino_invoice_follower_ids
+            if followers:
+                move.message_subscribe(partner_ids=followers.ids)
+        return moves
 
     def _get_last_sequence_domain(self, relaxed=False):
         # EXTENDS account: continue the credit note series only from credit notes

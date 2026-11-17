@@ -6,9 +6,29 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//group[@id='header_right_group']" position="inside">
+                <field name="camino_brand" invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="camino_project_type" invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="camino_project_code" invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="camino_purchase_order" invisible="move_type not in ('out_invoice', 'out_refund')"/>
                 <field name="camino_location" invisible="move_type not in ('out_invoice', 'out_refund')"/>
                 <field name="camino_shoot_dates" invisible="move_type not in ('out_invoice', 'out_refund')"/>
                 <field name="camino_contact" invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                <!-- The collecting bank account is picked from the header, filtered by the invoice currency. -->
+                <field name="partner_bank_id" string="Bank Account"
+                       domain="[('partner_id.ref_company_ids', 'parent_of', company_id), '|', ('currency_id', '=', currency_id), ('currency_id', '=', False)]"
+                       invisible="move_type not in ('out_invoice', 'out_refund')"
+                       readonly="is_move_sent and state != 'draft'"/>
+            </xpath>
+            <!-- The standard fields in the "Other Info" tab are replaced by the header one. -->
+            <xpath expr="//group[@name='sale_info_group']/field[@name='partner_bank_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_info_group']/field[@name='partner_bank_id'][2]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_info_group']" position="inside">
+                <field name="camino_channel" invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="camino_internal_note" invisible="move_type not in ('out_invoice', 'out_refund')"/>
             </xpath>
         </field>
     </record>
@@ -19,7 +39,30 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='name']" position="after">
+                <field name="camino_description" optional="show"/>
                 <field name="camino_name_es" optional="show"/>
+                <field name="camino_channel" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_account_invoice_filter_camino" model="ir.ui.view">
+        <field name="name">account.move.select.camino.media</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="camino_project_code"/>
+                <separator/>
+                <filter string="Advertising" name="camino_type_advertising" domain="[('camino_project_type', '=', 'advertising')]"/>
+                <filter string="Film" name="camino_type_film" domain="[('camino_project_type', '=', 'film')]"/>
+                <filter string="TV" name="camino_type_tv" domain="[('camino_project_type', '=', 'tv')]"/>
+                <filter string="Documentary" name="camino_type_documentary" domain="[('camino_project_type', '=', 'documentary')]"/>
+                <filter string="Spot" name="camino_type_spot" domain="[('camino_project_type', '=', 'spot')]"/>
+                <filter string="Still Photography" name="camino_type_still_photo" domain="[('camino_project_type', '=', 'still_photo')]"/>
+                <group>
+                    <filter string="Project Type" name="camino_group_project_type" context="{'group_by': 'camino_project_type'}"/>
+                </group>
             </xpath>
         </field>
     </record>
