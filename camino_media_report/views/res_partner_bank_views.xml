@@ -8,9 +8,11 @@
             <xpath expr="//notebook" position="inside">
                 <page string="Invoice Details" name="camino_invoice_details">
                     <group>
+                        <field name="camino_payment_title"/>
+                        <field name="camino_account_notice"/>
                         <field name="camino_intermediary_bic"/>
                         <field name="camino_bank_address"/>
-                        <field name="camino_invoice_warning"/>
+                        <field name="camino_invoice_warning" string="Red Box (bank charges)"/>
                     </group>
                 </page>
             </xpath>

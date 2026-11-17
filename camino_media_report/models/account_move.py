@@ -1,3 +1,4 @@
+from babel.dates import format_date
 from markupsafe import Markup
 
 from odoo import api, fields, models
@@ -35,6 +36,26 @@ LABELS = {
     "description": ("Description", "Descripción"),
     "amount": ("Amount", "Importe"),
     "project_code": ("Project", "Proyecto"),
+    "invoice_number": ("Invoice #", "Nº Factura"),
+    "purchase_order_number": ("Purchase Order #", "Nº orden de compra"),
+    "date": ("Date", "Fecha"),
+    "client": ("Client", "Cliente"),
+    "issued_by": ("Issued by", "Emitida por"),
+    "telephone": ("Telephone", "Teléfono"),
+    "vat_cif": ("VAT / CIF", "CIF"),
+    "email": ("Email", "Correo"),
+    "sub_total": ("SUB TOTAL", "SUB TOTAL"),
+    "tax_base": ("TAX BASE", "BASE IMPONIBLE"),
+    "vat_exempt": ("VAT (EXEMPT)", "IVA (EXENTO)"),
+    "vat": ("VAT", "IVA"),
+    "total": ("TOTAL INVOICE", "TOTAL FACTURA"),
+    "credit_note_to": ("CREDIT NOTE", "NOTA DE CRÉDITO"),
+    "to_invoice": ("TO INVOICE", "RECTIFICA LA FACTURA"),
+    "payment_default": (
+        "Payment by wire/bank transfer.",
+        "Pago por transferencia bancaria.",
+    ),
+    "contact_label": ("Contact", "Contacto"),
     "purchase_order": ("Purchase Order", "Orden de compra"),
     "location": ("Location", "Localización"),
     "shoot_dates": ("Shoot Dates", "Fechas de rodaje"),
@@ -56,6 +77,14 @@ LABELS = {
         "El pago debe hacerse en la moneda de la cuenta.",
     ),
 }
+# How the representative that brought a job is printed on the line ("job from UK Rep").
+ORIGIN_PRINT = {
+    "ny_rep": "US Rep",
+    "london_rep": "UK Rep",
+    "hollywood_rep": "US Rep (Hollywood)",
+}
+STATE_AFTER_CITY = ("US", "CA", "AU")
+NBSP = "\u00a0"
 ES_STYLE = "font-style: italic; color: #6c757d; font-size: 85%;"
 
 
@@ -99,6 +128,68 @@ class AccountMove(models.Model):
         help="Internal: payment agreements and collection reminders.",
     )
 
+    def _get_name_invoice_report(self):
+        # EXTENDS account: customer invoices and credit notes use the Camino Media format.
+        if self.move_type in ("out_invoice", "out_refund"):
+            return "camino_media_report.report_camino_invoice_document"
+        return super()._get_name_invoice_report()
+
+    # --- print helpers ----------------------------------------------------
+    def _camino_money(self, amount):
+        """Spanish number format used on the invoices: 11 971,52."""
+        text = f"{abs(amount or 0.0):,.2f}".replace(",", NBSP).replace(".", ",")
+        negative = round(amount or 0.0, 2) < 0
+        return ("-" if negative else "") + text
+
+    def _camino_amount_header(self):
+        self.ensure_one()
+        if self.currency_id.name == "EUR":
+            return "EUROS €"
+        return self.currency_id.name
+
+    def _camino_date(self, date):
+        return format_date(date, "d MMMM yyyy", locale="en_US") if date else ""
+
+    def _camino_vat(self, partner):
+        vat = (partner.vat or "").strip()
+        prefix = vat[:2].upper()
+        if len(vat) > 2 and vat[2] != " " and prefix in (partner.country_id.code, "EL"):
+            return f"{vat[:2]} {vat[2:]}"
+        return vat
+
+    def _camino_partner_lines(self, partner):
+        """Address lines of a partner, the country in capitals."""
+        country = partner.country_id
+        city = partner.city or ""
+        zip_code = partner.zip or ""
+        if country.code in STATE_AFTER_CITY and partner.state_id:
+            locality = f"{city}, {partner.state_id.name} {zip_code}".strip()
+        else:
+            locality = f"{zip_code} {city}".strip()
+        lines = [partner.street, partner.street2, locality, (country.name or "").upper()]
+        return [line for line in lines if line]
+
+    def _camino_line_origin(self, line):
+        """"job from UK Rep": only when the company asks to print it."""
+        self.ensure_one()
+        if not self.company_id.sudo().camino_print_line_origin:
+            return ""
+        origin = ORIGIN_PRINT.get(line.sudo().camino_channel)
+        return f"job from {origin}" if origin else ""
+
+    def _camino_credit_target(self):
+        self.ensure_one()
+        return self.reversed_entry_id.name or self.ref or ""
+
+    def _camino_vat_label(self):
+        """VAT row label and the taxes it covers."""
+        self.ensure_one()
+        if not self.currency_id.is_zero(self.amount_tax):
+            percents = sorted({t.amount for t in self.invoice_line_ids.tax_ids})
+            names = ", ".join(f"{p:g}%" for p in percents)
+            return "vat", names
+        return "vat_exempt", ""
+
     @api.model
     def _camino_pair(self, key):
         """(English, Spanish) texts of a fixed label."""
@@ -111,6 +202,8 @@ class AccountMove(models.Model):
         With ``block`` the Spanish text goes on its own line (narrow table columns).
         """
         english, spanish = LABELS[key]
+        if english.lower() == spanish.lower():
+            return Markup("{}").format(english)
         style = ES_STYLE + (" display: block;" if block else "")
         return Markup('{} <span class="camino-es" style="{}">{}</span>').format(
             english, style, spanish

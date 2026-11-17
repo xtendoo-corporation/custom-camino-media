@@ -263,3 +263,38 @@ msgstr "Fotografía fija"
 #: model_terms:ir.ui.view,arch_db:camino_media_report.view_company_form_camino
 msgid "Invoice Branding"
 msgstr "Marca de la factura"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move_line__camino_project_code
+msgid "Project Code"
+msgstr "Código de proyecto"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move_line__camino_description
+msgid "Job Description"
+msgstr "Descripción del trabajo"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_company__camino_print_line_origin
+msgid "Print Work Origin on Lines"
+msgstr "Imprimir el origen del trabajo en las líneas"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_payment_title
+msgid "Payment Instructions"
+msgstr "Instrucciones de pago"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_account_notice
+msgid "Account Notice"
+msgstr "Aviso de la cuenta"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_invoice_warning
+msgid "Invoice Warning"
+msgstr "Aviso de la factura"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_partner_bank_form_camino
+msgid "Red Box (bank charges)"
+msgstr "Caja roja (gastos bancarios)"

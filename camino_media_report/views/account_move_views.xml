@@ -38,7 +38,29 @@
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
+            <!--
+                Líneas de factura de cliente simplificadas: etiqueta, código de proyecto, descripción,
+                traducción, origen e importe. Producto, cantidad (siempre 1), unidad y descuento
+                no se usan; los impuestos siguen aplicándose según la posición fiscal pero
+                quedan ocultos (se pueden mostrar desde el selector de columnas).
+            -->
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='product_id']" position="attributes">
+                <attribute name="column_invisible">parent.move_type in ('out_invoice', 'out_refund')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='quantity']" position="attributes">
+                <attribute name="column_invisible">parent.move_type in ('out_invoice', 'out_refund')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='product_uom_id'][1]" position="attributes">
+                <attribute name="column_invisible">parent.move_type in ('out_invoice', 'out_refund')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='discount']" position="attributes">
+                <attribute name="column_invisible">parent.move_type in ('out_invoice', 'out_refund')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='tax_ids']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
             <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='name']" position="after">
+                <field name="camino_project_code" optional="show"/>
                 <field name="camino_description" optional="show"/>
                 <field name="camino_name_es" optional="show"/>
                 <field name="camino_channel" optional="show"/>

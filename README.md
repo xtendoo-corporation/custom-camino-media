@@ -25,6 +25,12 @@ Además, en la versión 19.0.3.0.0:
 - Cuenta bancaria en la cabecera, elegida según la moneda, y aviso de pago en rojo y negrita.
 - Seguidores de facturas configurables en la compañía.
 
+Versión 19.0.4.0.0 (pendiente de subir): informe de factura propio de Camino Media
+(`report_camino_invoice_document`), usado para facturas y rectificativas de cliente mediante
+`_get_name_invoice_report`; la plantilla estándar queda intacta para el resto de documentos.
+Los textos de pago (instrucciones, aviso de cuenta y caja roja de comisiones) se configuran
+en cada cuenta bancaria. Código de proyecto y origen del trabajo también por línea.
+
 Las cuentas bancarias de la compañía deben estar marcadas como *de confianza*
 (`allow_out_payment`); si no, Odoo las borra al confirmar la factura.
 

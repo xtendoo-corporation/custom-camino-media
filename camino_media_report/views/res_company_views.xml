@@ -10,6 +10,7 @@
                     <group>
                         <field name="camino_psn_logo" widget="image" options="{'size': [0, 120]}"/>
                         <field name="camino_media_logo" widget="image" options="{'size': [0, 120]}"/>
+                        <field name="camino_print_line_origin"/>
                         <field name="camino_invoice_follower_ids" widget="many2many_tags"/>
                     </group>
                 </page>

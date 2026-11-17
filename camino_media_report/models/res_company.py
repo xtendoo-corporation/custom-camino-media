@@ -15,3 +15,9 @@ class ResCompany(models.Model):
         help="Partners (partners and accounting) subscribed to every customer invoice "
         "and credit note, so they receive a copy of the sent emails.",
     )
+    camino_print_line_origin = fields.Boolean(
+        string="Print Work Origin on Lines",
+        default=True,
+        help='Prints "job from UK Rep" under the concept of the lines that have a '
+        "representative as work origin.",
+    )

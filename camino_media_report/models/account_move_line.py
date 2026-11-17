@@ -7,10 +7,17 @@ class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
 
     camino_name_es = fields.Text(string="Description (ES)", copy=False)
-    camino_description = fields.Char(
+    camino_description = fields.Text(
         string="Job Description",
         copy=False,
-        help="Printed between brackets after the concept, which is printed in bold.",
+        help="Printed in italics under the concept, which is printed in bold. "
+        "Write the brackets yourself if you want them.",
+    )
+    camino_project_code = fields.Char(
+        string="Project Code",
+        copy=False,
+        help="Project of this line (e.g. PROJ583). Printed before the concept "
+        "unless the concept already contains it.",
     )
     camino_channel = fields.Selection(
         CHANNELS,
