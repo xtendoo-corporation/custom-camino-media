@@ -9,6 +9,8 @@
     "depends": ["account"],
     "data": [
         "views/account_move_views.xml",
+        "data/res_currency.xml",
+        "views/res_partner_bank_views.xml",
         "report/invoice_report.xml",
     ],
     "installable": True,

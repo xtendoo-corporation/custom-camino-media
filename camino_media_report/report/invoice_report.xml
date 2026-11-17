@@ -6,6 +6,55 @@
         <xpath expr="//t[@t-call='web.external_layout']" position="before">
             <t t-set="company" t-value="o.company_id.sudo().with_context(lang=lang)"/>
         </xpath>
+        <!-- Solo descripción e importe: los servicios se facturan globalmente, sin unidades. -->
+        <xpath expr="//th[@name='th_quantity']" position="replace"/>
+        <xpath expr="//th[@name='th_priceunit']" position="replace"/>
+        <xpath expr="//th[@name='th_discount']" position="replace"/>
+        <xpath expr="//th[@name='th_taxes']" position="replace"/>
+        <xpath expr="//td[@name='td_quantity']" position="replace"/>
+        <xpath expr="//td[@name='td_price_unit']" position="replace"/>
+        <xpath expr="//td[@name='td_discount']" position="replace"/>
+        <xpath expr="//td[@name='td_taxes']" position="replace"/>
+        <!-- Descripción en español en gris, bajo el concepto en inglés. -->
+        <xpath expr="//td[@name='account_invoice_line_name']" position="inside">
+            <div t-if="line.camino_name_es" class="text-muted" t-out="line.camino_name_es"/>
+        </xpath>
+        <!-- Datos de la cuenta de cobro: la cuenta la elige Odoo según la moneda de la factura. -->
+        <xpath expr="//t[@t-set='show_qr']" position="before">
+            <div t-if="o.move_type in ('out_invoice', 'out_refund') and o.partner_bank_id" name="camino_bank_block" class="mb-3">
+                <table class="table table-sm table-borderless w-auto mb-1">
+                    <tr>
+                        <td class="fw-bold">Beneficiary / Beneficiario:</td>
+                        <td t-out="o.partner_bank_id.acc_holder_name"/>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">Bank / Banco:</td>
+                        <td t-out="o.partner_bank_id.bank_id.name"/>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">SWIFT/BIC Code / Codigo SWIFT/BIC:</td>
+                        <td t-out="o.partner_bank_id.bank_bic"/>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">IBAN:</td>
+                        <td t-out="o.partner_bank_id.acc_number"/>
+                    </tr>
+                    <tr t-if="o.partner_bank_id.camino_intermediary_bic">
+                        <td class="fw-bold">Intermediary BIC:</td>
+                        <td t-out="o.partner_bank_id.camino_intermediary_bic"/>
+                    </tr>
+                    <tr t-if="o.partner_bank_id.camino_bank_address">
+                        <td class="fw-bold">Address / Dirección:</td>
+                        <td t-out="o.partner_bank_id.camino_bank_address" style="white-space: pre-line;"/>
+                    </tr>
+                </table>
+                <p class="mb-1">Please cite invoice number for our reference.</p>
+                <p t-if="o.partner_bank_id.camino_invoice_warning"
+                   class="fw-bold text-danger mb-0"
+                   style="white-space: pre-line;"
+                   t-out="o.partner_bank_id.camino_invoice_warning"/>
+            </div>
+        </xpath>
         <xpath expr="//div[@name='reference']" position="after">
             <div class="col" t-if="o.camino_location" name="camino_location">
                 <strong t-out="o.fields_get(['camino_location'], ['string'])['camino_location']['string']"/>

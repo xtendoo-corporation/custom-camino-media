@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Libra esterlina disponible para facturar a clientes del Reino Unido.
+        base marca sus monedas como noupdate, así que un <record> no la reactivaría:
+        se escribe directamente en cada actualización del módulo.
+    -->
+    <function model="res.currency" name="write">
+        <value eval="[ref('base.GBP')]"/>
+        <value eval="{'active': True}"/>
+    </function>
+</odoo>

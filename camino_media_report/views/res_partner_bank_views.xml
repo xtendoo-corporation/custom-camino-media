@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_bank_form_camino" model="ir.ui.view">
+        <field name="name">res.partner.bank.form.camino.media</field>
+        <field name="model">res.partner.bank</field>
+        <field name="inherit_id" ref="base.view_partner_bank_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Invoice Details" name="camino_invoice_details">
+                    <group>
+                        <field name="camino_intermediary_bic"/>
+                        <field name="camino_bank_address"/>
+                        <field name="camino_invoice_warning"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

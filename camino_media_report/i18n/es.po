@@ -63,3 +63,23 @@ msgstr "Localización"
 #: model:ir.model.fields,field_description:camino_media_report.field_account_move__camino_shoot_dates
 msgid "Shoot Dates"
 msgstr "Fechas de rodaje"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_move_line__camino_name_es
+msgid "Description (ES)"
+msgstr "Descripción (ES)"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_intermediary_bic
+msgid "Intermediary BIC"
+msgstr "BIC intermediario"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_bank_address
+msgid "Bank Address"
+msgstr "Dirección del banco"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_res_partner_bank__camino_invoice_warning
+msgid "Invoice Warning"
+msgstr "Aviso en factura"
