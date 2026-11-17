@@ -345,6 +345,17 @@
             <t t-set="camino_only" t-value="all(d._get_name_invoice_report() == 'camino_media_report.report_camino_invoice_document' for d in docs)"/>
             <t t-if="camino_only" t-set="data_report_margin_top" t-value="9"/>
             <t t-if="camino_only" t-set="data_report_header_spacing" t-value="1"/>
+            <t t-if="camino_only" t-set="data_report_margin_bottom" t-value="9"/>
+        </xpath>
+    </template>
+
+    <!--
+        Odoo admite el margen inferior por documento (data-report-margin-bottom), pero la
+        plantilla base no lo emite. Solo se escribe el atributo cuando un informe lo pide.
+    -->
+    <template id="report_layout" inherit_id="web.report_layout">
+        <xpath expr="//html" position="attributes">
+            <attribute name="t-att-data-report-margin-bottom">data_report_margin_bottom</attribute>
         </xpath>
     </template>
 </odoo>

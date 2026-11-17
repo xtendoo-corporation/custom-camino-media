@@ -270,12 +270,14 @@ class TestCaminoInvoice(TransactionCase):
         html = self._html(self._invoice_with_line())
         self.assertIn('data-report-margin-top="9"', html)
         self.assertIn('data-report-header-spacing="1"', html)
+        self.assertIn('data-report-margin-bottom="9"', html)
 
     def test_vendor_bill_report_keeps_the_standard_margins(self):
         bill = self._invoice_with_line(move_type="in_invoice")
         html = self._html(bill)
         self.assertNotIn("cm-invoice", html)
         self.assertNotIn("data-report-margin-top", html)
+        self.assertNotIn("data-report-margin-bottom", html)
 
     def test_report_has_no_standard_layout(self):
         html = self._html(self._invoice_with_line())
