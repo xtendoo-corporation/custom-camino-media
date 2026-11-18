@@ -1,7 +1,7 @@
 {
     "name": "Camino Media - Facturas",
     "summary": "Localización, fechas de rodaje y contacto en el informe de factura estándar",
-    "version": "19.0.4.0.0",
+    "version": "19.0.5.0.0",
     "category": "Accounting/Accounting",
     "author": "Xtendoo",
     "website": "https://caminomedia.xtd.es",
@@ -12,6 +12,8 @@
         "data/res_currency.xml",
         "views/res_partner_bank_views.xml",
         "views/res_company_views.xml",
+        "views/account_fiscal_position_views.xml",
+        "data/fiscal_position_legends.xml",
         "report/invoice_report.xml",
     ],
     "installable": True,

@@ -298,3 +298,18 @@ msgstr "Aviso de la factura"
 #: model_terms:ir.ui.view,arch_db:camino_media_report.view_partner_bank_form_camino
 msgid "Red Box (bank charges)"
 msgstr "Caja roja (gastos bancarios)"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_fiscal_position__camino_legend_en
+msgid "Invoice Legend (EN)"
+msgstr "Leyenda de la factura (EN)"
+
+#. module: camino_media_report
+#: model:ir.model.fields,field_description:camino_media_report.field_account_fiscal_position__camino_legend_es
+msgid "Invoice Legend (ES)"
+msgstr "Leyenda de la factura (ES)"
+
+#. module: camino_media_report
+#: model_terms:ir.ui.view,arch_db:camino_media_report.view_account_position_form_camino
+msgid "Invoice Legend (printed under the totals)"
+msgstr "Leyenda de la factura (se imprime bajo los totales)"

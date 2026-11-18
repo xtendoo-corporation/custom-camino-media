@@ -270,7 +270,7 @@ class TestCaminoInvoice(TransactionCase):
         html = self._html(self._invoice_with_line())
         self.assertIn('data-report-margin-top="9"', html)
         self.assertIn('data-report-header-spacing="1"', html)
-        self.assertIn('data-report-margin-bottom="9"', html)
+        self.assertIn('data-report-margin-bottom="16"', html)
 
     def test_vendor_bill_report_keeps_the_standard_margins(self):
         bill = self._invoice_with_line(move_type="in_invoice")
@@ -333,9 +333,9 @@ class TestCaminoInvoice(TransactionCase):
         html = self._html(self._invoice_with_line())
         self.assertEqual(html.count("N/A"), 3)
 
-    def test_empty_optional_data_is_blank_on_credit_notes(self):
+    def test_empty_optional_data_prints_na_on_credit_notes_too(self):
         refund = self._invoice_with_line(move_type="out_refund")
-        self.assertNotIn("N/A", self._html(refund))
+        self.assertEqual(self._html(refund).count("N/A"), 3)
 
     def test_client_and_issuer_blocks(self):
         html = self._html(self._invoice_with_line())
@@ -347,8 +347,20 @@ class TestCaminoInvoice(TransactionCase):
         phone = self.env.company.partner_id
         phone.write({"phone": "+34 699 92 62 49", "email": "finance@caminomedia.com"})
         html = self._html(self._invoice_with_line())
-        self.assertIn("Tel: +34 699 92 62 49", html)
+        self.assertIn("+34 699 92 62 49", html)
+        self.assertNotIn("Tel:", html)
         self.assertIn("finance@caminomedia.com", html)
+
+    def test_footer_is_a_real_page_footer(self):
+        # Odoo moves div.footer to the bottom margin of every page (wkhtmltopdf footer).
+        self.env.company.report_footer = "<p>Sociedad Limitada, inscrita en el Registro Mercantil</p>"
+        html = self._html(self._invoice_with_line())
+        self.assertRegex(html, r'<div class="footer" name="camino_footer">')
+        self.assertNotIn("cm-footer", html)
+
+    def test_footer_is_omitted_without_registry_text(self):
+        self.env.company.report_footer = False
+        self.assertNotIn('name="camino_footer"', self._html(self._invoice_with_line()))
 
     def test_footer_prints_the_company_registry_text(self):
         company = self.env.company
@@ -483,7 +495,162 @@ class TestCaminoInvoice(TransactionCase):
 
     def test_credit_note_title_is_bilingual(self):
         html = self._html(self._invoice_with_line(move_type="out_refund"))
-        self.assertIn("Nota de crédito", html)
+        self.assertIn("Factura rectificativa", html)
+
+    # --- VAT legends (gestoría) ------------------------------------------------------------
+    def _position(self, **values):
+        return self.env["account.fiscal.position"].create({"name": "Test position", **values})
+
+    def test_vat_legend_is_printed_under_the_totals_with_an_asterisk(self):
+        invoice = self._invoice_with_line()
+        invoice.fiscal_position_id = self._position(
+            camino_legend_en="Reverse charge.",
+            camino_legend_es="Operación no sujeta por inversión del sujeto pasivo",
+        )
+        html = self._html(invoice)
+        self.assertIn('name="camino_vat_legend"', html)
+        self.assertIn("* Reverse charge.", html)
+        self.assertIn("Operación no sujeta por inversión del sujeto pasivo", html)
+        # English first (black), Spanish after (grey, smaller)
+        self.assertLess(html.index("* Reverse charge."), html.index("Operación no sujeta por inversión"))
+        self.assertIn(".cm-invoice .cm-vl-es { font-size: 8pt; color: #8a909c; }", html)
+        # the asterisk also marks the VAT row
+        self.assertRegex(html, r"IVA \(EXENTO\)</span></strong>\s*<strong> \*</strong>")
+        # and it comes after the totals
+        self.assertLess(html.index('name="camino_totals"'), html.index('name="camino_vat_legend"'))
+
+    def test_extra_community_legend_text(self):
+        invoice = self._invoice_with_line()
+        invoice.fiscal_position_id = self._position(
+            camino_legend_en="Service not subject to Spanish VAT under Article 69 of the Spanish VAT Act (Ley 37/1992).",
+            camino_legend_es="Operación no sujeta por estar localizada en sede del destinatario en virtud del artículo 69 de la Ley 37/1992",
+        )
+        html = self._html(invoice)
+        self.assertIn("* Service not subject to Spanish VAT under Article 69", html)
+        self.assertIn("artículo 69 de la Ley 37/1992", html)
+
+    def test_short_legend_keeps_both_languages_on_one_line(self):
+        invoice = self._invoice_with_line()
+        invoice.fiscal_position_id = self._position(
+            camino_legend_en="Reverse charge.", camino_legend_es="Operación no sujeta"
+        )
+        html = self._html(invoice)
+        self.assertRegex(html, rf"Reverse charge\.</span>\s*{NBSP}{NBSP}")
+        self.assertNotIn('class="cm-vl-es" style="display: block;"', html)
+
+    def test_long_legend_puts_the_spanish_text_on_its_own_line(self):
+        invoice = self._invoice_with_line()
+        invoice.fiscal_position_id = self._position(
+            camino_legend_en="Service not subject to Spanish VAT under Article 69 of the Spanish VAT Act (Ley 37/1992).",
+            camino_legend_es="Operación no sujeta por estar localizada en sede del destinatario",
+        )
+        html = self._html(invoice)
+        self.assertIn('class="cm-vl-es" style="display: block;"', html)
+
+    def test_no_vat_legend_without_a_legend(self):
+        html = self._html(self._invoice_with_line())
+        self.assertNotIn('name="camino_vat_legend"', html)
+        self.assertNotRegex(html, r"IVA \(EXENTO\)</span></strong>\s*<strong> \*</strong>")
+
+    def test_fiscal_position_note_is_still_used_without_camino_legend(self):
+        invoice = self._invoice_with_line()
+        invoice.fiscal_position_id = self._position(note="Nota fiscal antigua")
+        html = self._html(invoice)
+        self.assertIn("Nota fiscal antigua", html)
+        self.assertNotIn('name="camino_vat_legend"', html)
+
+    def test_legends_are_loaded_on_intra_and_extra_community_positions(self):
+        company = self.env.company
+        positions = {}
+        for suffix in ("fp_intra", "fp_extra"):
+            position = self._position(name=suffix)
+            self.env["ir.model.data"].create(
+                {"module": "account", "name": f"{company.id}_{suffix}",
+                 "model": "account.fiscal.position", "res_id": position.id}
+            )
+            positions[suffix] = position
+        self.env["account.fiscal.position"]._camino_load_vat_legends()
+        self.assertEqual(positions["fp_intra"].camino_legend_en, "Reverse charge.")
+        self.assertEqual(
+            positions["fp_intra"].camino_legend_es,
+            "Operación no sujeta por inversión del sujeto pasivo",
+        )
+        self.assertIn("Article 69 of the Spanish VAT Act (Ley 37/1992).", positions["fp_extra"].camino_legend_en)
+        self.assertIn("artículo 69 de la Ley 37/1992", positions["fp_extra"].camino_legend_es)
+
+    def test_loading_the_legends_never_overwrites_an_edited_one(self):
+        company = self.env.company
+        position = self._position(name="fp_intra", camino_legend_en="Mi texto")
+        self.env["ir.model.data"].create(
+            {"module": "account", "name": f"{company.id}_fp_intra",
+             "model": "account.fiscal.position", "res_id": position.id}
+        )
+        self.env["account.fiscal.position"]._camino_load_vat_legends()
+        self.assertEqual(position.camino_legend_en, "Mi texto")
+        self.assertFalse(position.camino_legend_es)
+
+    def test_fiscal_position_form_has_the_legend_fields(self):
+        arch = self.env["account.fiscal.position"].get_view(view_type="form")["arch"]
+        self.assertIn('name="camino_legend_en"', arch)
+        self.assertIn('name="camino_legend_es"', arch)
+
+    # --- credit note texts (gestoría) -------------------------------------------------------
+    def _rectified_invoice(self):
+        invoice = self._invoice_with_line(invoice_date="2026-08-18")
+        invoice.action_post()
+        refund = self._invoice_with_line(move_type="out_refund", invoice_date="2026-10-19")
+        refund.reversed_entry_id = invoice
+        return invoice, refund
+
+    def test_credit_note_texts_name_the_invoice_and_its_date(self):
+        invoice, refund = self._rectified_invoice()
+        english, spanish = refund._camino_credit_note_texts()
+        self.assertEqual(english, f"{invoice.name} OF 18 AUG 2026")
+        self.assertEqual(spanish, f"{invoice.name} DE 18 AGOSTO 2026")
+
+    def test_credit_note_has_a_red_english_box_and_a_grey_spanish_box(self):
+        invoice, refund = self._rectified_invoice()
+        html = self._html(refund)
+        self.assertIn('name="camino_credit_note_box"', html)
+        self.assertIn('name="camino_credit_note_box_es"', html)
+        for text in (
+            "CREDIT NOTE", f"TO INVOICE {invoice.name} OF 18 AUG 2026",
+            "FACTURA RECTIFICATIVA", f"DE LA FACTURA {invoice.name} DE 18 AGOSTO 2026",
+        ):
+            self.assertIn(text, html)
+        # English box first, grey Spanish one after
+        self.assertLess(html.index('name="camino_credit_note_box"'), html.index('name="camino_credit_note_box_es"'))
+        self.assertIn(".cm-invoice .cm-credit-es", html)
+
+    def test_credit_note_without_a_rectified_invoice_uses_the_reference(self):
+        refund = self._invoice_with_line(move_type="out_refund")
+        refund.ref = "035-26"
+        self.assertEqual(refund._camino_credit_note_texts(), ("035-26", "035-26"))
+        self.assertIn("TO INVOICE 035-26", self._html(refund))
+
+    def test_credit_note_header_has_the_red_tag_and_red_spanish_label(self):
+        refund = self._invoice_with_line(move_type="out_refund", invoice_date="2026-10-19")
+        refund.action_post()
+        html = self._html(refund)
+        self.assertIn("Factura rectificativa", html)
+        self.assertRegex(html, r"Factura rectificativa</span>")
+        self.assertIn("color: #c62828 !important", html)
+        # CREDITNOTE/... already says it: no second tag
+        self.assertNotIn('name="camino_credit_tag"', html)
+
+    def test_credit_note_red_tag_is_added_when_the_number_does_not_say_it(self):
+        refund = self._invoice_with_line(move_type="out_refund", invoice_date="2026-10-19")
+        refund.action_post()
+        refund.name = "065-26"
+        html = self._html(refund)
+        self.assertIn('name="camino_credit_tag"', html)
+        self.assertIn("- CREDIT NOTE", html)
+
+    def test_total_label_carries_the_invoice_number(self):
+        invoice = self._invoice_with_line(invoice_date="2026-06-18")
+        invoice.action_post()
+        html = self._html(invoice)
+        self.assertRegex(html, rf"TOTAL INVOICE {invoice.name}\s*<span[^>]*>TOTAL FACTURA</span>")
 
     # --- brand --------------------------------------------------------------------------
     def test_brand_header_shows_the_psn_logo(self):

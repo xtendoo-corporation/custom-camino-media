@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_position_form_camino" model="ir.ui.view">
+        <field name="name">account.fiscal.position.form.camino.media</field>
+        <field name="model">account.fiscal.position</field>
+        <field name="inherit_id" ref="account.view_account_position_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='note']" position="before">
+                <group string="Invoice Legend (printed under the totals)">
+                    <field name="camino_legend_en" placeholder="Reverse charge."/>
+                    <field name="camino_legend_es" placeholder="Operación no sujeta por inversión del sujeto pasivo"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

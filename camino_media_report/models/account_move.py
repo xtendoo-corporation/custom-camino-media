@@ -28,7 +28,7 @@ BRANDS = [
 # regardless of the customer language.
 LABELS = {
     "invoice": ("Invoice", "Factura"),
-    "credit_note": ("Credit Note", "Nota de crédito"),
+    "credit_note": ("Credit Note", "Factura rectificativa"),
     "invoice_date": ("Invoice Date", "Fecha de factura"),
     "credit_note_date": ("Credit Note Date", "Fecha de la nota de crédito"),
     "due_date": ("Due Date", "Fecha de vencimiento"),
@@ -49,8 +49,8 @@ LABELS = {
     "vat_exempt": ("VAT (EXEMPT)", "IVA (EXENTO)"),
     "vat": ("VAT", "IVA"),
     "total": ("TOTAL INVOICE", "TOTAL FACTURA"),
-    "credit_note_to": ("CREDIT NOTE", "NOTA DE CRÉDITO"),
-    "to_invoice": ("TO INVOICE", "RECTIFICA LA FACTURA"),
+    "credit_note_to": ("CREDIT NOTE", "FACTURA RECTIFICATIVA"),
+    "to_invoice": ("TO INVOICE", "DE LA FACTURA"),
     "payment_default": (
         "Payment by wire/bank transfer.",
         "Pago por transferencia bancaria.",
@@ -181,6 +181,26 @@ class AccountMove(models.Model):
         self.ensure_one()
         return self.reversed_entry_id.name or self.ref or ""
 
+    def _camino_credit_note_texts(self):
+        """("051-26 OF 18 AUG 2026", "051-26 DE 18 AGOSTO 2026") for the rectified invoice."""
+        self.ensure_one()
+        target = self.reversed_entry_id
+        number = target.name or self.ref or ""
+        date = target.invoice_date
+        if not date:
+            return number, number
+        english = format_date(date, "d MMM yyyy", locale="en_US").upper()
+        spanish = format_date(date, "d MMMM yyyy", locale="es_ES").upper()
+        return f"{number} OF {english}", f"{number} DE {spanish}"
+
+    def _camino_vat_legend(self):
+        """(English, Spanish) legend of the fiscal position, or None when it has none."""
+        self.ensure_one()
+        position = self.fiscal_position_id
+        if position.camino_legend_en or position.camino_legend_es:
+            return position.camino_legend_en or "", position.camino_legend_es or ""
+        return None
+
     def _camino_vat_label(self):
         """VAT row label and the taxes it covers."""
         self.ensure_one()
@@ -196,15 +216,20 @@ class AccountMove(models.Model):
         return LABELS[key]
 
     @api.model
-    def _camino_label(self, key, block=False):
+    def _camino_label(self, key, block=False, color=None, middle=None):
         """Bilingual label: English followed by the Spanish one (italic, grey, small).
 
-        With ``block`` the Spanish text goes on its own line (narrow table columns).
+        ``block`` puts the Spanish text on its own line (narrow table columns), ``color``
+        paints it with another colour (e.g. red) and ``middle`` goes between both texts.
         """
         english, spanish = LABELS[key]
+        if middle:
+            english = f"{english} {middle}"
         if english.lower() == spanish.lower():
             return Markup("{}").format(english)
         style = ES_STYLE + (" display: block;" if block else "")
+        if color:
+            style += f" color: {color} !important;"
         return Markup('{} <span class="camino-es" style="{}">{}</span>').format(
             english, style, spanish
         )

@@ -64,10 +64,14 @@
             .cm-invoice .cm-red { color: #c62828; font-weight: bold; }
             .cm-invoice .cm-due { margin-top: 10px; }
             .cm-invoice .cm-legend { margin-top: 8px; font-size: 8.3pt; color: #6b7280; }
+            .cm-invoice .cm-vatlegend { margin-top: 10px; }
+            .cm-invoice .cm-vl-en { font-size: 9pt; color: #14171f; }
+            .cm-invoice .cm-vl-es { font-size: 8pt; color: #8a909c; }
 
             /* Rectificativa */
             .cm-invoice .cm-credit { border: 2px solid #c62828; background: #fdf0ef; color: #c62828; text-align: center; font-weight: bold; padding: 9px; margin: 16px 20% 4px 20%; border-radius: 6px; letter-spacing: .4px; }
             .cm-invoice .cm-credit .camino-es { color: #c62828 !important; }
+            .cm-invoice .cm-credit-es { border: 2px solid #9aa0ab; background: #f4f5f7; color: #8a909c; text-align: center; padding: 7px; margin: 6px 20% 4px 20%; border-radius: 6px; font-size: 8.3pt; letter-spacing: .3px; }
 
             /* Pago */
             .cm-invoice .cm-pay { margin-top: 12px; page-break-inside: avoid; }
@@ -79,7 +83,6 @@
             .cm-invoice .cm-bank td.v { font-weight: bold; }
             .cm-invoice .cm-redbox { border-left: 5px solid #c62828; background: #fdf0ef; color: #c62828; font-weight: bold; padding: 8px 12px; margin-top: 9px; border-radius: 0 6px 6px 0; }
             .cm-invoice .cm-redbox div { margin-bottom: 2px; }
-            .cm-invoice .cm-footer { text-align: center; color: #8a909c; font-size: 7.3pt; margin-top: 14px; padding-top: 6px; border-top: 1px solid #e6e7ee; }
         </style>
     </template>
 
@@ -112,12 +115,13 @@
                     </td>
                     <td class="cm-doc" style="vertical-align: middle;">
                         <div class="cm-doctype">
-                            <t t-if="is_credit_note" t-out="o._camino_label('credit_note')"/>
+                            <t t-if="is_credit_note" t-out="o._camino_label('credit_note', color='#c62828')"/>
                             <t t-else="" t-out="o._camino_label('invoice')"/>
                         </div>
                         <div class="cm-number" name="invoice_date">
                             <t t-if="o.name and o.name != '/'" t-out="o.name"/>
                             <t t-else="">Draft / Borrador</t>
+                            <span t-if="is_credit_note and o.name and 'CREDIT' not in o.name.upper()" class="cm-red" name="camino_credit_tag"> - CREDIT NOTE</span>
                         </div>
                         <div class="cm-lbl" style="margin: 3px 0 0 0;" t-out="o._camino_label('invoice_number')"/>
                     </td>
@@ -134,17 +138,17 @@
                     </td>
                     <td style="width: 34%;" name="camino_purchase_order">
                         <div class="cm-lbl" t-out="o._camino_label('purchase_order_number')"/>
-                        <div class="cm-metaval" t-out="o.camino_purchase_order or ('' if is_credit_note else 'N/A')"/>
+                        <div class="cm-metaval" t-out="o.camino_purchase_order or 'N/A'"/>
                     </td>
                     <td name="camino_location">
                         <div class="cm-lbl" t-out="o._camino_label('location')"/>
-                        <div class="cm-metaval" t-out="o.camino_location or ('' if is_credit_note else 'N/A')"/>
+                        <div class="cm-metaval" t-out="o.camino_location or 'N/A'"/>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="3" name="camino_shoot_dates">
                         <div class="cm-lbl" t-out="o._camino_label('shoot_dates')"/>
-                        <div class="cm-metaval" t-out="o.camino_shoot_dates or ('' if is_credit_note else 'N/A')"/>
+                        <div class="cm-metaval" t-out="o.camino_shoot_dates or 'N/A'"/>
                     </td>
                 </tr>
                 <tr t-if="o.camino_project_code">
@@ -180,7 +184,7 @@
                                 </td>
                                 <td>
                                     <div class="cm-lbl" t-out="o._camino_label('telephone')"/>
-                                    <div class="cm-val" t-if="issuer.phone">Tel: <t t-out="issuer.phone"/></div>
+                                    <div class="cm-val" t-if="issuer.phone" t-out="issuer.phone"/>
                                 </td>
                             </tr>
                             <tr>
@@ -237,13 +241,21 @@
                 <span t-out="o._camino_label('contact_label')"/>: <span t-out="o.camino_contact"/>
             </div>
 
-            <!-- Rectificativa: caja roja con la factura que rectifica. -->
-            <div class="cm-credit" t-if="is_credit_note" name="camino_credit_note_box">
-                <div t-out="o._camino_label('credit_note_to')"/>
-                <div><t t-out="o._camino_label('to_invoice')"/> <t t-out="o._camino_credit_target()"/></div>
-            </div>
+            <!-- Rectificativa: caja roja en inglés y caja gris en español con la factura que rectifica. -->
+            <t t-if="is_credit_note">
+                <t t-set="credit_texts" t-value="o._camino_credit_note_texts()"/>
+                <div class="cm-credit" name="camino_credit_note_box">
+                    <div t-out="o._camino_pair('credit_note_to')[0]"/>
+                    <div><t t-out="o._camino_pair('to_invoice')[0]"/> <t t-out="credit_texts[0]"/></div>
+                </div>
+                <div class="cm-credit-es" name="camino_credit_note_box_es">
+                    <div t-out="o._camino_pair('credit_note_to')[1]"/>
+                    <div><t t-out="o._camino_pair('to_invoice')[1]"/> <t t-out="credit_texts[1]"/></div>
+                </div>
+            </t>
 
             <!-- Totales. -->
+            <t t-set="vat_legend" t-value="o._camino_vat_legend()"/>
             <table class="cm-totals" name="camino_totals">
                 <tr>
                     <td><strong t-out="o._camino_label('sub_total')"/></td>
@@ -255,20 +267,28 @@
                 </tr>
                 <tr>
                     <t t-set="vat_key" t-value="o._camino_vat_label()"/>
-                    <td><strong t-out="o._camino_label(vat_key[0])"/> <span t-if="vat_key[1]" t-out="vat_key[1]"/></td>
+                    <td><strong t-out="o._camino_label(vat_key[0])"/> <span t-if="vat_key[1]" t-out="vat_key[1]"/><strong t-if="vat_legend"> *</strong></td>
                     <td class="cm-amt">
                         <t t-if="vat_key[0] == 'vat_exempt'">-<t t-if="o.currency_id.name == 'EUR'">&#160;€</t></t>
                         <t t-else=""><t t-call="camino_media_report.camino_money"><t t-set="amount" t-value="o.amount_tax"/></t></t>
                     </td>
                 </tr>
                 <tr class="cm-grand">
-                    <td><t t-out="o._camino_label('total')"/></td>
+                    <td><t t-out="o._camino_label('total', middle=(o.name if o.name and o.name != '/' else None))"/></td>
                     <td class="cm-amt"><t t-call="camino_media_report.camino_money"><t t-set="amount" t-value="o.amount_total"/></t></td>
                 </tr>
             </table>
+            <div class="cm-vatlegend" t-if="vat_legend" name="camino_vat_legend">
+                <t t-set="legend_long" t-value="len(vat_legend[0]) > 40"/>
+                <span class="cm-vl-en">* <t t-out="vat_legend[0]"/></span>
+                <t t-if="vat_legend[1]">
+                    <t t-if="not legend_long">&#160;&#160;</t>
+                    <span class="cm-vl-es" t-att-style="'display: block;' if legend_long else None" t-out="vat_legend[1]"/>
+                </t>
+            </div>
             <div class="cm-red cm-due" t-if="not is_credit_note and o.invoice_payment_term_id and not is_html_empty(o.invoice_payment_term_id.note)"
                  name="camino_payment_due" t-out="o.invoice_payment_term_id.note"/>
-            <div class="cm-legend" t-if="not is_html_empty(o.fiscal_position_id.note)" name="camino_fiscal_legend"
+            <div class="cm-legend" t-if="not vat_legend and not is_html_empty(o.fiscal_position_id.note)" name="camino_fiscal_legend"
                  t-out="o.fiscal_position_id.note"/>
 
             <!-- Pago: la cuenta la elige Odoo según la moneda de la factura. -->
@@ -325,8 +345,16 @@
                 </div>
             </t>
 
-            <!-- Pie: datos registrales de la compañía. -->
-            <div class="cm-footer" name="camino_footer" t-if="company.report_footer" t-out="company.report_footer"/>
+            <!--
+                Pie: datos registrales de la compañía. Odoo saca el div.footer del contenido y lo
+                pinta en el margen inferior de cada página, así que siempre queda al final.
+                Va con estilos en línea porque el pie se renderiza aparte del resto del documento.
+            -->
+            <div class="footer" name="camino_footer" t-if="company.report_footer">
+                <div style="text-align: center; color: #8a909c; font-size: 7.3pt; line-height: 1.3; border-top: 1px solid #e6e7ee; padding: 5px 14mm 0 14mm; margin: 0 8mm;">
+                    <t t-out="company.report_footer"/>
+                </div>
+            </div>
         </div>
     </template>
 
@@ -345,7 +373,7 @@
             <t t-set="camino_only" t-value="all(d._get_name_invoice_report() == 'camino_media_report.report_camino_invoice_document' for d in docs)"/>
             <t t-if="camino_only" t-set="data_report_margin_top" t-value="9"/>
             <t t-if="camino_only" t-set="data_report_header_spacing" t-value="1"/>
-            <t t-if="camino_only" t-set="data_report_margin_bottom" t-value="9"/>
+            <t t-if="camino_only" t-set="data_report_margin_bottom" t-value="16"/>
         </xpath>
     </template>
 

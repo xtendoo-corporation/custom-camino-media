@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Solo rellena las posiciones sin leyenda: nunca pisa lo que se haya editado. -->
+    <function model="account.fiscal.position" name="_camino_load_vat_legends"/>
+</odoo>
